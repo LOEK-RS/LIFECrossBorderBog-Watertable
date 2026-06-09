@@ -1,0 +1,20 @@
+---
+title: "index"
+format: html
+---
+
+
+
+# Grundwasserstände Hündfelder Moor
+
+
+```{r}
+#| echo: false
+#| width: 100%
+#| height: 600pt
+knitr::include_url("plots/interaktive_karte.html")
+```
+
+
+
+
