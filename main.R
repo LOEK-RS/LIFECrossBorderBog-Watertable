@@ -19,7 +19,7 @@ gwsHeader = readRDS("data/de_gwsHeader.RDS")
 
 
 
-
+source("02-aggregate_statistics.r")
 
 # create Plots
 source("vis_interactive_overview.R")
@@ -27,7 +27,7 @@ source("vis_interactive_overview.R")
 source("vis_all_time_series.R")
 
 
-
+source("vis_overview_map.R")
 
 
 

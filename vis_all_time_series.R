@@ -1,6 +1,6 @@
 q = lubridate::quarter(gws$Datum, with_year = TRUE, type = "date_last") |> unique()
 
-lubridate::quarter(gws$Datum, type = "date_first")
+
 
 
 bg_shading = data.frame(
@@ -26,7 +26,7 @@ ggplot(gws, aes(x = Datum, y = GWS_rel))+
   gg_theme_report+
   theme(plot.margin=grid::unit(c(0,0,0,0), "mm"), panel.grid.major.x = element_line(linetype = "dashed"))
 
-ggsave("plots/zeitreihen_flurabstand.png", width = 25, height = 25, units = "cm")
+ggsave("plots/zeitreihen_flurabstand.png", width = 60, height = 25, units = "cm")
 
 
 ggplot(gws, aes(x = Datum, y = GWS_abs))+
@@ -42,4 +42,4 @@ ggplot(gws, aes(x = Datum, y = GWS_abs))+
   gg_theme_report+
   theme(plot.margin=grid::unit(c(0,0,0,0), "mm"), panel.grid.major.x = element_line(linetype = "dashed"))
 
-ggsave("figures/zeitreihen_sollist.png", width = 25, height = 25, units = "cm")
+ggsave("plots/zeitreihen_sollist.png", width = 60, height = 25, units = "cm")

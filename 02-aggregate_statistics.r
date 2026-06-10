@@ -5,6 +5,8 @@
 
 
 
+
+
 gwsAggregate <- function(gws, y, m){
 gws_sub = gws |> filter(year(Datum) %in% y) |> filter(month(Datum) %in% m)
 
@@ -18,7 +20,7 @@ gws_statistics = gws_sub |> group_by(IDshort) |>
 
 }
 
-gws_median = gwsAggregate(gws, y = c(2024,2025), m = c(1,2,3,4,5,6,7,8,9))
+gws_median = gwsAggregate(gws, y = c(2024,2025,2026), m = c(1,2,3,4,5,6,7,8,9,10,11,12))
 
 
 gwsStats = left_join(gwsHeader, gws_median)
