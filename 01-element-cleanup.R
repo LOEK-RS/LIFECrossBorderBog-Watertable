@@ -2,14 +2,26 @@
 
 
 library(tidyverse)
+library(sf)
 
-element_files = list.files("element_exports/", full.names = TRUE)
-element = lapply(element_files, read.csv, skip = 1)
-element[[3]]$MS.Nr = as.character(element[[3]]$MS.Nr)
-element = bind_rows(element)
+element_files = list.files("element_exports/", full.names = TRUE, pattern = ".csv$")
+
+element = lapply(element_files, function(x){
+
+ f = read.csv(x, skip = 1)
+ f$MS.Nr = NULL
+  
+  return(f)
 
 
-## Implement star model here!!!
+})
+
+
+# Combine all measurements to one dataframe and remove duplicated rows
+# These rows stem from overlapping export dates
+element = bind_rows(element) |> distinct()
+
+
 
 ## MEASUREMENT TABLE
 
@@ -40,12 +52,16 @@ element_meta = element |> select(
   Polder.Nummer,
   GWS_Soll,
   gueltig_ab
-) |> distinct() |> na.omit()
+) |> distinct()
+
+
+element_meta = element_meta |> filter(!is.na(Easting)) |> filter(!is.na(Hoehe_absolut))
+
 
 element_meta$IDshort = str_sub(element_meta$ID, -4)
 element_meta = element_meta |> rename(GWS_Soll_abs = GWS_Soll)
 element_meta = element_meta |> rename(Hoehe_abs = Hoehe_absolut)
-
+element_meta$Betreiber = "Zwillbrock"
 
 
 # PATCH: 244E7B0000004584 is in twice, it has wrong coordinates
@@ -57,8 +73,14 @@ element_meta$GWS_Soll_abs[element_meta$GWS_Soll_abs == 43.7] <- 4370
 
 
 
-element_measurements_MISSING_INFORMATION = element_measurements |> filter(!(ID %in% element_meta$ID))
+
+
+# filter measurements to only include Sensors with full metadata available
 element_measurements = element_measurements |> filter(ID %in% element_meta$ID)
+
+
+
+
 
 ### -------------------
 
@@ -72,7 +94,6 @@ element_meta$gueltig_ab[is.na(element_meta$gueltig_ab)] <- lubridate::as_datetim
 
 element_measurements = element_measurements |> left_join(element_meta[,c("ID", "gueltig_ab")]) |> filter(Datum_Zeit > gueltig_ab) |> select(-gueltig_ab)
 # -----
-
 
 
 
@@ -109,18 +130,12 @@ gws = left_join(gws, dailyMeanRel, by = join_by(ID, Datum))
 gws = left_join(gws, dailyDiff, by = join_by(ID, Datum))
 
 
-
-
-
-
-
-element_meta = st_as_sf(element_meta, coords = c("Easting", "Northing"), crs = 25832)
-
-
+element_meta = sf::st_as_sf(element_meta, coords = c("Easting", "Northing"), crs = 25832)
 
 
 saveRDS(element_meta, "data/de_gwsHeader.RDS")
-saveRDS(gws, "data/de_gws.RDS")
+saveRDS(gws, "data/de_gwsDailyMeasurement.RDS")
+sf::write_sf(element_meta, "data/de_gwsHeader.gpkg")
 
 
 

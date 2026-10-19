@@ -1,20 +1,74 @@
 ---
-title: "index"
-format: html
+title: "Grundwasserstände Hündfelder Moor"
+format: 
+  html:
+    page-layout: full
 ---
 
 
 
-# Grundwasserstände Hündfelder Moor
-
 
 ```{r}
 #| echo: false
-#| width: 100%
-#| height: 600pt
-knitr::include_url("plots/interaktive_karte.html")
+#| warning: false
+#| message: false
+#| label: setup
+
+source("init.R")
+gws = readRDS("data/cbb_gwsDaily.RDS")
+gwsHeader = read_sf("data/cbb_gwsHeader.gpkg")
+
+
+
+
+
 ```
 
 
 
 
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+#| width: 100%
+#| height: 1500pt
+
+bg_shading = data.frame(
+  
+  xmin=lubridate::quarter(gws$Datum, type = "date_first") |> unique(),
+  xmax=lubridate::quarter(gws$Datum, type = "date_last") |> unique(),
+  ymin=-Inf,
+  ymax=Inf
+)
+bg_shading$fill = rep(c("grey80", 'white'), length.out = nrow(bg_shading), each = 1)
+
+
+
+
+p = lapply(gwsHeader$ID, function(x){
+
+  gws |> filter(ID == x) |> 
+    
+  ggplot(aes(x = Datum, y = GWS_rel))+
+  geom_rect(data = bg_shading, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), inherit.aes=FALSE, show.legend = FALSE, alpha = 0.5)+
+  scale_fill_manual(values = c("white" = "white", "grey80" = "grey80"))+
+  geom_point(size = 1, color = "royalblue")+
+  geom_line(color = "royalblue2")+
+  geom_hline(yintercept = 0)+
+  scale_x_date(name = NULL, date_breaks = 'year', date_labels = '%y')+
+  ggtitle(paste0("GWS relativ [cm]; Sensor ", x))+
+  scale_y_continuous(name = NULL)+
+  gg_theme_report+
+  theme(plot.margin=grid::unit(c(5,5,5,5), "mm"), panel.grid.major.x = element_line(linetype = "dashed"))
+
+
+})
+
+
+mapviewOptions(basemaps = c("OpenTopoMap"), leafletHeight = 1000)
+mapview(gwsHeader, popup = popupGraph(p, width = 500, height = 300), legend = FALSE, zcol = "ID", col.regions = "black", color = "white")
+
+
+
+```

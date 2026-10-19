@@ -10,6 +10,7 @@ library(basemaps)
 library(ggiraph)
 library(patchwork)
 library(colorspace)
+library(leafpop)
 
 
 
