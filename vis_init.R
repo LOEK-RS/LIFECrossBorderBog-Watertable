@@ -22,14 +22,6 @@ gg_theme_report <- theme(text = element_text(color = "black"), line = element_li
 
 
 
-bg_shading = data.frame(
-  
-  xmin=lubridate::quarter(gws$Datum, type = "date_first") |> unique(),
-  xmax=lubridate::quarter(gws$Datum, type = "date_last") |> unique(),
-  ymin=-Inf,
-  ymax=Inf
-)
-bg_shading$fill = rep(c("grey80", 'white'), length.out = nrow(bg_shading), each = 1)
 
 
 

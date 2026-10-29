@@ -14,7 +14,7 @@ format:
 #| message: false
 #| label: setup
 
-source("init.R")
+source("vis_init.R")
 gws = readRDS("data/cbb_gwsDaily.RDS")
 gwsHeader = read_sf("data/cbb_gwsHeader.gpkg")
 
@@ -28,11 +28,14 @@ gwsHeader = read_sf("data/cbb_gwsHeader.gpkg")
 
 
 ```{r}
+#| label: Interactive Map
 #| echo: false
 #| warning: false
 #| message: false
 #| width: 100%
 #| height: 1500pt
+
+
 
 bg_shading = data.frame(
   
@@ -42,7 +45,6 @@ bg_shading = data.frame(
   ymax=Inf
 )
 bg_shading$fill = rep(c("grey80", 'white'), length.out = nrow(bg_shading), each = 1)
-
 
 
 
