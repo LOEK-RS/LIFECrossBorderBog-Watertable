@@ -3,7 +3,7 @@
 library(tidyverse)
 library(sf)
 
-nlmeta = read.csv("nl_exports/2025-06-06 14h37m25_Aamsveen_N2000_meta.csv", skip = 8, sep = ";")
+nlmeta = read.csv("raw/nl_exports/2025-06-06 14h37m25_Aamsveen_N2000_meta.csv", skip = 8, sep = ";")
 
 nlmeta = nlmeta |> filter(FilterNo == 1)
 
@@ -42,7 +42,7 @@ nlmeta$gueltig_ab = lubridate::as_datetime(str_sub(nlmeta$gueltig_ab, start = 1,
 
 ## Actual data of loggers
 
-nl = read.csv("nl_exports/2025-06-06 14h37m25_Aamsveen_N2000.csv", skip = 1,
+nl = read.csv("raw/nl_exports/2025-06-06 14h37m25_Aamsveen_N2000.csv", skip = 1,
               sep = ";")
 nl$X = NULL
 nl$ManualHead = NULL
@@ -58,12 +58,30 @@ nl$FilterNo = NULL
 nl$DateTime = lubridate::as_datetime(nl$DateTime, format = "%d-%m-%Y %H:%M")
 nl$LoggerHead = as.numeric(nl$LoggerHead)
 
+colnames(nl) = c("ID", "DateTime", "GWS_abs")
+
+
+nl = left_join(nl, nlmeta[,c("ID", "IDshort", "GWS_Soll_abs", "Hoehe_abs")])
+nl$GWS_abs = nl$GWS_abs * 100
+nl$GWS_rel = round(nl$GWS_abs - nl$Hoehe_abs)
+nl$GWS_diff = round(nl$GWS_Soll_abs - nl$GWS_abs)
+
+
+## Zwischenstand alle Messungen speichern
+
+
+write.csv(nl, "data/nl/nl_allMeasurements.csv", row.names = FALSE)
+
+###############
+
+# Regular daily data of relevant time frame
+
 nl = nl |> filter(DateTime >= ymd("2024-01-01"))
 nl$Datum = date(nl$DateTime)
 
-colnames(nl) = c("ID", "DateTime", "GWS_abs", "Datum")
-
-dailyMeanAbs = nl |> group_by(ID, Datum) |> summarise(GWS_abs = round(mean(GWS_abs * 100), digits = 0))
+dailyMeanAbs = nl |> group_by(ID, Datum) |> summarise(GWS_abs = round(mean(GWS_abs), digits = 0),
+GWS_rel = round(mean(GWS_rel)),
+GWS_diff = round(mean(GWS_diff)))
 
 ## Create full dataset with missing values
 sensors = unique(nl$ID)
@@ -72,27 +90,11 @@ nlgws = expand.grid(ID = sensors, Datum = dates)
 
 nlgws = left_join(nlgws, dailyMeanAbs, by = dplyr::join_by(ID, Datum))
 
-nlgws = left_join(nlgws, nlmeta[,c("ID", "Hoehe_abs")])
-nlgws$GWS_rel = nlgws$GWS_abs - nlgws$Hoehe_abs
-nlgws$geometry = NULL
-nlgws$Hoehe_abs = NULL
 nlgws$IDshort = nlgws$ID
+nlgws = nlgws |> relocate(ID, IDshort, Datum, GWS_abs, GWS_rel, GWS_diff)
 
 
 
-
-nlgws = left_join(nlgws, nlmeta[c("ID", "GWS_Soll_abs")])
-
-
-nlgws$GWS_def = nlgws$GWS_Soll_abs - nlgws$GWS_abs
-nlgws$GWS_Soll_abs = NULL
-
-
-nlgws = nlgws |> relocate(ID, IDshort, Datum, GWS_abs, GWS_rel, GWS_def)
-nlgws$geometry = NULL
-
-
-saveRDS(nlgws, "data/nl_gws.RDS")
-saveRDS(nlmeta, "data/nl_gwsHeader.RDS")
-write_sf(nlmeta, "data/nl_gwsHeader.gpkg")
-
+write.csv(nlgws, "data/nl/nl_gwsDaily.csv")
+saveRDS(nlgws, "data/nl/nl_gwsDaily.RDS")
+sf::write_sf(nlmeta, "data/nl/nl_gwsHeader.gpkg")

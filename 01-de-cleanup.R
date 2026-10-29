@@ -4,7 +4,7 @@
 library(tidyverse)
 library(sf)
 
-element_files = list.files("element_exports/", full.names = TRUE, pattern = ".csv$")
+element_files = list.files("raw/element_exports/", full.names = TRUE, pattern = ".csv$")
 
 element = lapply(element_files, function(x){
 
@@ -101,6 +101,19 @@ element_measurements = element_measurements |> left_join(element_meta[,c("ID", "
 element_measurements = element_measurements[element_measurements$SRSSI_Signalstaerke == 10,]
 element_measurements = element_measurements[element_measurements$SRC_Echoguete == 10,]
 
+element_measurements$SRSSI_Signalstaerke = NULL
+element_measurements$SRC_Echoguete = NULL
+
+
+## Zwischenstand speichern: alle guten messwerte
+
+element_measurements$IDshort = str_sub(element_measurements$ID, -4) |> as.factor()
+element_measurements = element_measurements |> relocate(ID, IDshort, Datum_Zeit, Abstand)
+
+
+write.csv(element_measurements, "data/de/de_allMeasurements.csv", row.names = FALSE)
+
+
 
 
 
@@ -132,10 +145,9 @@ gws = left_join(gws, dailyDiff, by = join_by(ID, Datum))
 
 element_meta = sf::st_as_sf(element_meta, coords = c("Easting", "Northing"), crs = 25832)
 
-
-saveRDS(element_meta, "data/de_gwsHeader.RDS")
-saveRDS(gws, "data/de_gwsDailyMeasurement.RDS")
-sf::write_sf(element_meta, "data/de_gwsHeader.gpkg")
+write.csv(gws, "data/de/de_gwsDaily.csv")
+saveRDS(gws, "data/de/de_gwsDaily.RDS")
+sf::write_sf(element_meta, "data/de/de_gwsHeader.gpkg")
 
 
 
