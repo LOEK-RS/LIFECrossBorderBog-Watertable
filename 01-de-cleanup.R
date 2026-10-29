@@ -38,9 +38,9 @@ element_measurements = element |> select(
 
 
 element_measurements$GWS_abs = round(element_measurements$GWS_abs, digits = 0)
+element_measurements$GWS_rel = round(element_measurements$GWS_rel, digits = 0)
 
-
-
+colnames(element_measurements)[4] = "GWS_diff"
 
 ## META TABLE
 
@@ -125,7 +125,7 @@ element_measurements$Datum = date(element_measurements$Datum_Zeit)
 
 dailyMeanAbs = element_measurements |> group_by(ID, Datum) |> summarise(GWS_abs = round(mean(GWS_abs), digits = 0))
 dailyMeanRel = element_measurements |> group_by(ID, Datum) |> summarise(GWS_rel = round(mean(GWS_rel), digits = 0))
-dailyDiff = element_measurements |> group_by(ID, Datum) |> summarise(GWS_def = round(mean(GWS_Diff), digits = 0))
+dailyDiff = element_measurements |> group_by(ID, Datum) |> summarise(GWS_diff = round(mean(GWS_diff), digits = 0))
 
 
 

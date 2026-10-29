@@ -68,7 +68,10 @@ nl$GWS_diff = round(nl$GWS_Soll_abs - nl$GWS_abs)
 
 
 ## Zwischenstand alle Messungen speichern
+nl$geometry = NULL
 
+nl = nl[,c("ID", "IDshort", "DateTime", "GWS_abs", "GWS_rel", "GWS_diff")]
+colnames(nl) = c("ID", "IDshort", "Datum_Zeit", "GWS_abs", "GWS_rel", "GWS_diff")
 
 write.csv(nl, "data/nl/nl_allMeasurements.csv", row.names = FALSE)
 
@@ -76,8 +79,8 @@ write.csv(nl, "data/nl/nl_allMeasurements.csv", row.names = FALSE)
 
 # Regular daily data of relevant time frame
 
-nl = nl |> filter(DateTime >= ymd("2024-01-01"))
-nl$Datum = date(nl$DateTime)
+nl = nl |> filter(Datum_Zeit >= ymd("2024-01-01"))
+nl$Datum = date(nl$Datum_Zeit)
 
 dailyMeanAbs = nl |> group_by(ID, Datum) |> summarise(GWS_abs = round(mean(GWS_abs), digits = 0),
 GWS_rel = round(mean(GWS_rel)),
