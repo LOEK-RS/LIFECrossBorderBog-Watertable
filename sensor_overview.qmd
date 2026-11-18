@@ -1,0 +1,63 @@
+---
+title: Sensor Overview
+---
+
+
+
+```{r}
+#| label: init
+
+library(sf)
+library(terra)
+library(tidyverse)
+library(flextable)
+
+sensors <- st_read("data/cbb_gwsHeader.gpkg")
+rawdata <- read.csv("raw/element_valid_measurements.csv")
+
+sensors <- sensors |> filter(Betreiber == "Zwillbrock")
+```
+
+
+```{r}
+#| label: raw data Stats
+
+rawdata <- left_join(rawdata, sensors, by = "ID")
+rawdata$Datum_Zeit <- as_datetime(rawdata$Datum_Zeit)
+
+# rawdata <- rawdata |>
+#   filter(
+#     Datum_Zeit >= as_date("2025-11-01") & Datum_Zeit <= as_date("2026-10-31")
+#   )
+
+number_of_measurements <- rawdata |>
+  group_by(ID) |>
+  summarise(
+    first_measurement = date(min(Datum_Zeit)),
+    n = n(),
+    src10 = sum(SRC_Echoguete == 10),
+    srssi10 = sum(SRSSI_Signalstaerke == 10),
+    both10 = sum(SRC_Echoguete == 10 & SRSSI_Signalstaerke == 10)
+  )
+
+
+number_of_measurements$highqualityRatio <- round(
+  number_of_measurements$both10 /
+    number_of_measurements$n,
+  2
+)
+
+
+measurement_range <- paste0(
+  "Measurement Range: ",
+  range(date(rawdata$Datum_Zeit))
+)
+
+
+flextable::flextable(number_of_measurements[
+  order(number_of_measurements$highqualityRatio, decreasing = TRUE),
+]) |>
+  flextable::set_caption("Sensor Overview")
+```
+
+
